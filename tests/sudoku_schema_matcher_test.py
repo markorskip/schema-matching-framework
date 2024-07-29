@@ -37,5 +37,25 @@ class SudokuSchemaMatcherTest(unittest.TestCase):
         print(result)
         self.assertEqual(expected_result, result)
 
+
+    def test_algorithm_can_solve_unmatched(self):
+        source_columns = ["a","b","z"]
+        destination_columns = ["a","ba","x"]
+        # in the scenario, z does not have a good match
+
+        possible_matches = sort_by_closest_match("z", destination_columns)
+        expected_no_matches = {'a': 0.0, 'ba': 0.0, 'x': 0.0}
+        print(expected_no_matches)
+        self.assertEqual(possible_matches,expected_no_matches)
+        
+        # z is able to be matched because a and b are matched, and their destination
+        # columns have been removed
+        expected_result = {'a':'a','b':'ba','z':'x'}
+        result = sudoku_matching_algorithm(source_columns, destination_columns)
+
+        print(result)
+        self.assertEqual(expected_result, result)
+
+
 if __name__ == '__main__':
     unittest.main()
