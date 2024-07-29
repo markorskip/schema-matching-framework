@@ -12,6 +12,7 @@
   - [Introduction](#introduction)
   - [Expectations](#expectations)
   - [Installation](#installation)
+  - [Testing](#testing)
   - [License](#license)
 
 ## Introduction
@@ -49,6 +50,12 @@ That being said, this framework should be able to reduce the type of data migrat
 
 ```console
 pip install schema-matching-framework
+```
+
+## Testing
+
+```console
+hatch test
 ```
 
 ## License
