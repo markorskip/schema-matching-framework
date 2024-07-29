@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # schema-matching-framework
 
 [![PyPI - Version](https://img.shields.io/pypi/v/schema-matching-framework.svg)](https://pypi.org/project/schema-matching-framework)
@@ -62,6 +61,3 @@ hatch test
 ## License
 
 `schema-matching-framework` is distributed under the terms of the [MIT](https://spdx.org/licenses/MIT.html) license.
-=======
-# schema-matching-framework
->>>>>>> 88a7730 (Initial commit)
