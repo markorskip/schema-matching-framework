@@ -24,7 +24,9 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: CPython",
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
-dependencies = []
+dependencies = [
+  "pydantic"
+]
 
 [project.urls]
 Documentation = "https://github.com/markorskip/schema-matching-framework#readme"
@@ -33,6 +35,12 @@ Source = "https://github.com/markorskip/schema-matching-framework"
 
 [tool.hatch.version]
 path = "src/schema_matching_framework/__about__.py"
+
+
+[tool.hatch.envs.default]
+dependencies = [
+  "pydantic"
+]
 
 [tool.hatch.envs.types]
 extra-dependencies = [
