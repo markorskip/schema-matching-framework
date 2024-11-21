@@ -25,7 +25,8 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
 dependencies = [
-  "pydantic"
+  "pydantic",
+  "sentence-transformers"
 ]
 
 [project.urls]
