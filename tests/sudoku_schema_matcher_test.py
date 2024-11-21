@@ -1,61 +1,42 @@
-
-# Example usage
 import unittest
-from schema_matching_framework.sudoku_schema_matcher import sort_by_closest_match, sudoku_matching_algorithm
-import logging
 
-class SudokuSchemaMatcherTest(unittest.TestCase):
-    
-    def test_sort_by_closest_match(self):
-        source_column = "employee.first_name"
-        destination_columns = ["employee.fname", "employee.lname", "employee.mname", "employee.id", "employee.dob"]
-        
-        expected_match = 'employee.fname'
+# Sample test data
+sample_data = [
+    {"TableName": "ADMISSIONS", "TableDesc": "The ADMISSIONS table gives information regarding a patient’s admission to the hospital.",
+     "ColumnName": "SUBJECT_ID", "ColumnDesc": "The ADMISSIONS table can be linked to the PATIENTS table using SUBJECT_ID"},
+    {"TableName": "ADMISSIONS", "TableDesc": "The ADMISSIONS table gives information regarding a patient’s admission to the hospital.",
+     "ColumnName": "HADM_ID", "ColumnDesc": "Each row of this table contains a unique HADM_ID, which represents a single patient’s admission to the hospital."},
+    {"TableName": "CALLOUT", "TableDesc": "Information regarding when a patient was cleared for ICU discharge and when the patient was actually discharged.",
+     "ColumnName": "SUBJECT_ID", "ColumnDesc": "patient corresponding to the given call out event"},
+    {"TableName": "CALLOUT", "TableDesc": "Information regarding when a patient was cleared for ICU discharge and when the patient was actually discharged.",
+     "ColumnName": "HADM_ID", "ColumnDesc": "hospital admission corresponding to the given call out event"},
+]
 
-        result = sort_by_closest_match(source_column, destination_columns)
-        print(result)
+expected_mapping = {
+    "ADMISSIONS.SUBJECT_ID": "CALLOUT.SUBJECT_ID",
+    "ADMISSIONS.HADM_ID": "CALLOUT.HADM_ID",
+}
 
-        # Check if the result matches the expected output
-        self.assertTrue(expected_match in next(iter(result)))
-        
-        # Additional checks to ensure sorting is correct
-        sorted_items = list(result.items())
-        self.assertTrue(all(sorted_items[i][1] >= sorted_items[i + 1][1] for i in range(len(sorted_items) - 1)))
+class TestColumnMatching(unittest.TestCase):
+    def setUp(self):
+        # Create Column objects for source and destination tables
+        self.source_columns = [
+            Column(data["TableName"], data["TableDesc"], data["ColumnName"], data["ColumnDesc"])
+            for data in sample_data[:2]  # First two rows are source
+        ]
+        self.destination_columns = [
+            Column(data["TableName"], data["TableDesc"], data["ColumnName"], data["ColumnDesc"])
+            for data in sample_data[2:]  # Last two rows are destination
+        ]
 
-    def test_algorithm(self):
-        source_columns = ["employee.first_name", "employee.last_name", "employee.middle_name", "employee.id", "employee.date_of_birth"]
-        destination_columns = ["employee.fname", "employee.lname", "employee.mname", "employee.id", "employee.dob"]
-        
-        expected_result = {'employee.id': 'employee.id', 
-                           'employee.last_name': 'employee.lname', 
-                           'employee.first_name': 'employee.fname', 
-                           'employee.middle_name': 'employee.mname', 
-                           'employee.date_of_birth': 'employee.dob'}
+    def test_column_matching(self):
+        # Run the matching algorithm
+        result = match_columns(self.source_columns, self.destination_columns)
 
-        result = sudoku_matching_algorithm(source_columns, destination_columns)
+        # Verify the mapping
+        for source, dest in expected_mapping.items():
+            self.assertIn(source, result)
+            self.assertEqual(result[source], dest)
 
-        print(result)
-        self.assertEqual(expected_result, result)
-
-
-    def test_algorithm_can_solve_unmatched(self):
-        source_columns = ["a","b","z"]
-        destination_columns = ["a","ba","x"]
-        # in the scenario, z does not have a good match
-
-        possible_matches = sort_by_closest_match("z", destination_columns)
-        expected_no_matches = {'a': 0.0, 'ba': 0.0, 'x': 0.0}
-        print(expected_no_matches)
-        self.assertEqual(possible_matches,expected_no_matches)
-        
-        # z is able to be matched because a and b are matched, and their destination
-        # columns have been removed
-        expected_result = {'a':'a','b':'ba','z':'x'}
-        result = sudoku_matching_algorithm(source_columns, destination_columns)
-
-        print(result)
-        self.assertEqual(expected_result, result)
-
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
