@@ -1,68 +1,80 @@
 import difflib
-from typing import List
+from typing import List, Dict
 
-    # Define a function to get the similarity ratio
+# Define a new structure for columns
+class Column:
+    def __init__(self, table_name: str, table_description: str, column_name: str, column_description: str):
+        self.table_name = table_name
+        self.table_description = table_description
+        self.column_name = column_name
+        self.column_description = column_description
 
-def sort_by_closest_match(source_column: str, destination_columns: List[str]):
+    def __str__(self):
+        return f"{self.table_name}.{self.column_name} ({self.table_description}, {self.column_description})"
 
-    def similarity_ratio(s):
-        return difflib.SequenceMatcher(None, source_column, s).ratio()
+def calculate_similarity(source: str, destination: str) -> float:
+    """Calculate similarity between two strings."""
+    return difflib.SequenceMatcher(None, source, destination).ratio()
 
-    # Create a dictionary with similarity ratios
-    similarity_dict = {s: similarity_ratio(s) for s in destination_columns}
-    
-    # Sort the dictionary by similarity ratio in descending order
-    sorted_similarity_dict = dict(sorted(similarity_dict.items(), key=lambda item: item[1], reverse=True))
-    
-    return sorted_similarity_dict
+def compare_columns(source_column: Column, destination_column: Column) -> float:
+    """Compare a source column with a destination column based on multiple attributes."""
+    name_similarity = calculate_similarity(source_column.column_name, destination_column.column_name)
+    description_similarity = calculate_similarity(source_column.column_description, destination_column.column_description)
+    table_name_similarity = calculate_similarity(source_column.table_name, destination_column.table_name)
+    table_description_similarity = calculate_similarity(source_column.table_description, destination_column.table_description)
 
-def compare_each_column_to_destination(source_columns: List[str], destination_columns: List[str]):
+    # Weighted average of similarities
+    return (name_similarity * 0.5 +
+            description_similarity * 0.3 +
+            table_name_similarity * 0.1 +
+            table_description_similarity * 0.1)
 
-    # Compare each column to the destination list, and return the highest matching source and destination
-    highest_match_source_column = source_columns[0]
-    highest_match_destination_column = destination_columns[0] # init with something in case no matches
+def find_best_match(source_column: Column, destination_columns: List[Column]) -> Dict[str, float]:
+    """Find the best match for a source column in the destination columns."""
+    similarity_scores = {
+        str(dest): compare_columns(source_column, dest)
+        for dest in destination_columns
+    }
+    # Sort by similarity scores in descending order
+    return dict(sorted(similarity_scores.items(), key=lambda item: item[1], reverse=True))
 
-    overall_highest_match_score_for_all_columns = 0
-
-    for source_column in source_columns:
-        matching_dict = sort_by_closest_match(source_column, destination_columns)
-    
-        #Get the hightest match column
-        match_dest_column_name = next(iter(matching_dict))
-        match_score_for_this_column = matching_dict[match_dest_column_name]
-    
-        if (match_score_for_this_column > overall_highest_match_score_for_all_columns):
-            overall_highest_match_score_for_all_columns = match_score_for_this_column
-            highest_match_source_column = source_column
-            highest_match_destination_column = match_dest_column_name
-
-    print("Highest match: " + highest_match_source_column + ": " + highest_match_destination_column)
-    print("Total score:")
-    print(overall_highest_match_score_for_all_columns)
-    return highest_match_source_column, highest_match_destination_column
-
-def sudoku_matching_algorithm(source_columns: List[str], destination_columns: List[str]):
-    # compare each column in the source to ALL the columns in the destination and creating matching scores
-    # Then for each column, find the one with the highest probability match
-    # The create a mapping for the source and destination, remove them from the original sets, and run the algorithm again
-    # do this over and over again until a mapping has been found for every source column
-
+def match_columns(source_columns: List[Column], destination_columns: List[Column]) -> Dict[str, str]:
+    """Match source columns to destination columns."""
     mapping = {}
 
-    # while source columns size > 0
     while source_columns:
-        highest_match_source_column, highest_match_destination_column = compare_each_column_to_destination(source_columns, destination_columns)
-        mapping[highest_match_source_column] = highest_match_destination_column
-        print("Removing source column:" + highest_match_source_column)
+        highest_match_score = 0
+        best_source = None
+        best_destination = None
 
-        source_columns.remove(highest_match_source_column)
-        print("Removing destination column:" + highest_match_destination_column)
-        destination_columns.remove(highest_match_destination_column)
+        for source in source_columns:
+            match_results = find_best_match(source, destination_columns)
+            best_dest, score = next(iter(match_results.items()))
+            if score > highest_match_score:
+                highest_match_score = score
+                best_source = source
+                best_destination = best_dest
 
-        print("Remaining source and  destination columns")
-        print (source_columns)
-        print (destination_columns)
+        if best_source and best_destination:
+            mapping[str(best_source)] = best_destination
+            source_columns.remove(best_source)
+            destination_columns = [
+                col for col in destination_columns if str(col) != best_destination
+            ]
 
     return mapping
-        
 
+# Example Usage
+source_columns = [
+    Column("users", "User table", "user_id", "Unique identifier for user"),
+    Column("users", "User table", "email", "User's email address"),
+]
+
+destination_columns = [
+    Column("customers", "Customer table", "customer_id", "Unique identifier for customer"),
+    Column("customers", "Customer table", "email_address", "Customer's email address"),
+]
+
+result = match_columns(source_columns, destination_columns)
+for source, dest in result.items():
+    print(f"{source} -> {dest}")
